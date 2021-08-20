@@ -1,8 +1,9 @@
 const fs = require("fs");
 const path = require("path");
 const chalk = require("chalk");
+const render = require("./render");
 
-const fobiddenDirs = ["node_modules"];
+const forbiddenDirs = ["node_modules"];
 
 class Runner {
   constructor() {
@@ -13,13 +14,17 @@ class Runner {
     for (let file of this.testFiles) {
       console.log(chalk.gray(`--- ${file.shortName}`));
       const beforeEaches = [];
+      global.render = render;
       global.beforeEach = (fn) => {
         beforeEaches.push(fn);
       };
-      global.it = (desc, fn) => {
+      global.beforeEach = (fn) => {
+        beforeEaches.push(fn);
+      };
+      global.it = async (desc, fn) => {
         beforeEaches.forEach((func) => func());
         try {
-          fn();
+          await fn();
           console.log(chalk.green(`\tOK - ${desc}`));
         } catch (err) {
           const message = err.message.replace(/\n/g, "\n\t\t");
